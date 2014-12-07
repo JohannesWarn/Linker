@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8F9212911A333337002E89E5 /* SettingsTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9212901A333337002E89E5 /* SettingsTableViewController.m */; };
+		8F9212941A333B5D002E89E5 /* RegionTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9212931A333B5D002E89E5 /* RegionTableViewController.m */; };
+		8F92129B1A34905E002E89E5 /* ProgressNavigationBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F92129A1A34905E002E89E5 /* ProgressNavigationBar.m */; };
 		8FA0F4941A2B1DD400BA8CAD /* EditPostViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA0F4931A2B1DD400BA8CAD /* EditPostViewController.m */; };
 		8FA0F4991A2B4D0B00BA8CAD /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FA0F4981A2B4D0B00BA8CAD /* libsqlite3.dylib */; };
 		8FA0F49B1A2B4D1100BA8CAD /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FA0F49A1A2B4D1100BA8CAD /* libz.dylib */; };
@@ -40,7 +43,6 @@
 		8FA4E9FF1A2A2048006B46E7 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FA4E9FD1A2A2048006B46E7 /* LaunchScreen.xib */; };
 		8FA4EA0B1A2A2048006B46E7 /* LinkerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA4EA0A1A2A2048006B46E7 /* LinkerTests.m */; };
 		8FA4EA161A2A2A8A006B46E7 /* PostsTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA4EA151A2A2A8A006B46E7 /* PostsTableViewController.m */; };
-		8FF841381A2C77EA00F29D40 /* PostTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF841371A2C77EA00F29D40 /* PostTableViewCell.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +56,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8F92128F1A333337002E89E5 /* SettingsTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsTableViewController.h; sourceTree = "<group>"; };
+		8F9212901A333337002E89E5 /* SettingsTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsTableViewController.m; sourceTree = "<group>"; };
+		8F9212921A333B5D002E89E5 /* RegionTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RegionTableViewController.h; sourceTree = "<group>"; };
+		8F9212931A333B5D002E89E5 /* RegionTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RegionTableViewController.m; sourceTree = "<group>"; };
+		8F9212991A34905E002E89E5 /* ProgressNavigationBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProgressNavigationBar.h; sourceTree = "<group>"; };
+		8F92129A1A34905E002E89E5 /* ProgressNavigationBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProgressNavigationBar.m; sourceTree = "<group>"; };
 		8FA0F4921A2B1DD400BA8CAD /* EditPostViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditPostViewController.h; sourceTree = "<group>"; };
 		8FA0F4931A2B1DD400BA8CAD /* EditPostViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EditPostViewController.m; sourceTree = "<group>"; };
 		8FA0F4981A2B4D0B00BA8CAD /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
@@ -94,8 +102,6 @@
 		8FA4EA0A1A2A2048006B46E7 /* LinkerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LinkerTests.m; sourceTree = "<group>"; };
 		8FA4EA141A2A2A8A006B46E7 /* PostsTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PostsTableViewController.h; sourceTree = "<group>"; };
 		8FA4EA151A2A2A8A006B46E7 /* PostsTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PostsTableViewController.m; sourceTree = "<group>"; };
-		8FF841361A2C77EA00F29D40 /* PostTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PostTableViewCell.h; sourceTree = "<group>"; };
-		8FF841371A2C77EA00F29D40 /* PostTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PostTableViewCell.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,6 +132,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8F92129C1A349066002E89E5 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				8F9212991A34905E002E89E5 /* ProgressNavigationBar.h */,
+				8F92129A1A34905E002E89E5 /* ProgressNavigationBar.m */,
+			);
+			name = Views;
+			sourceTree = "<group>";
+		};
 		8FA0F4951A2B4CB500BA8CAD /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -189,9 +204,9 @@
 			children = (
 				8FA4E9EF1A2A2048006B46E7 /* AppDelegate.h */,
 				8FA4E9F01A2A2048006B46E7 /* AppDelegate.m */,
-				8FF841341A2C77C000F29D40 /* View Controllers */,
-				8FF841351A2C77CB00F29D40 /* Cells */,
 				8FA4E9F81A2A2048006B46E7 /* Main.storyboard */,
+				8F92129C1A349066002E89E5 /* Views */,
+				8FF841341A2C77C000F29D40 /* View Controllers */,
 				8FA4E9FB1A2A2048006B46E7 /* Images.xcassets */,
 				8FA4E9FD1A2A2048006B46E7 /* LaunchScreen.xib */,
 				8FA4E9EB1A2A2048006B46E7 /* Supporting Files */,
@@ -229,21 +244,16 @@
 		8FF841341A2C77C000F29D40 /* View Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				8F92128F1A333337002E89E5 /* SettingsTableViewController.h */,
+				8F9212901A333337002E89E5 /* SettingsTableViewController.m */,
+				8F9212921A333B5D002E89E5 /* RegionTableViewController.h */,
+				8F9212931A333B5D002E89E5 /* RegionTableViewController.m */,
 				8FA4EA141A2A2A8A006B46E7 /* PostsTableViewController.h */,
 				8FA4EA151A2A2A8A006B46E7 /* PostsTableViewController.m */,
 				8FA0F4921A2B1DD400BA8CAD /* EditPostViewController.h */,
 				8FA0F4931A2B1DD400BA8CAD /* EditPostViewController.m */,
 			);
 			name = "View Controllers";
-			sourceTree = "<group>";
-		};
-		8FF841351A2C77CB00F29D40 /* Cells */ = {
-			isa = PBXGroup;
-			children = (
-				8FF841361A2C77EA00F29D40 /* PostTableViewCell.h */,
-				8FF841371A2C77EA00F29D40 /* PostTableViewCell.m */,
-			);
-			name = Cells;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -361,11 +371,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F9212911A333337002E89E5 /* SettingsTableViewController.m in Sources */,
 				8FA4EA161A2A2A8A006B46E7 /* PostsTableViewController.m in Sources */,
 				8FA4E9F11A2A2048006B46E7 /* AppDelegate.m in Sources */,
 				8FA0F4941A2B1DD400BA8CAD /* EditPostViewController.m in Sources */,
+				8F92129B1A34905E002E89E5 /* ProgressNavigationBar.m in Sources */,
 				8FA4E9EE1A2A2048006B46E7 /* main.m in Sources */,
-				8FF841381A2C77EA00F29D40 /* PostTableViewCell.m in Sources */,
+				8F9212941A333B5D002E89E5 /* RegionTableViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

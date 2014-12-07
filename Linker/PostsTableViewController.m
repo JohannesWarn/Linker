@@ -10,7 +10,6 @@
 
 #import "PostsTableViewController.h"
 #import "EditPostViewController.h"
-#import "PostTableViewCell.h"
 
 @interface PostsTableViewController ()
 
@@ -26,25 +25,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.bucketName = @"YOURBUCKETNAME";
-    [self setTitle:self.bucketName];
+    [self setTitle:self.bucket.name];
     
-    [self setupS3];
     [self setupScrollIndicator];
-    [self reloadBucket:self.bucketName];
-}
-
-- (void)setupS3
-{
-    AWSStaticCredentialsProvider *credentials = [AWSStaticCredentialsProvider
-                                                 credentialsWithAccessKey:@"YOURKEY"
-                                                 secretKey:@"YOURSECRETKEY"];
-    AWSServiceConfiguration *configuration = [AWSServiceConfiguration
-                                              configurationWithRegion:AWSRegionEUWest1
-                                              credentialsProvider:credentials];
-    
-    self.s3 = [[AWSS3 alloc] initWithConfiguration:configuration];
-    self.transferManager = [[AWSS3TransferManager alloc] initWithConfiguration:configuration identifier:@"main"];
+    [self reloadBucket:self.bucket];
 }
 
 - (void)setupScrollIndicator
@@ -62,12 +46,12 @@
     self.shouldCreateNewPost = NO;
 }
 
-- (void)reloadBucket:(NSString *)bucketName
+- (void)reloadBucket:(AWSS3Bucket *)bucket
 {
     typeof(self) __weak weakSelf = self;
     
     AWSS3ListObjectsRequest *request = [[AWSS3ListObjectsRequest alloc] init];
-    [request setBucket:bucketName];
+    [request setBucket:bucket.name];
     
     BFTask *task = [self.s3 listObjects:request];
     [task continueWithBlock:^id(BFTask *task) {
@@ -75,7 +59,8 @@
             AWSS3ListObjectsOutput *output = (AWSS3ListObjectsOutput *)task.result;
             weakSelf.bucketObjects = output.contents;
             dispatch_async(dispatch_get_main_queue(), ^{
-                [weakSelf.tableView reloadData];
+                [weakSelf.tableView reloadSections:[NSIndexSet indexSetWithIndex:0]
+                                  withRowAnimation:UITableViewRowAnimationAutomatic];
             });
         }
         
@@ -83,20 +68,32 @@
     }];
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (void)createNewPost
+{
+    [self.tableView selectRowAtIndexPath:nil animated:YES scrollPosition:UITableViewScrollPositionNone];
+    [self performSegueWithIdentifier:@"edit post" sender:self];
+    self.shouldCreateNewPost = NO;
+}
+
+- (IBAction)refresh:(UIBarButtonItem *)sender {
+    [self reloadBucket:self.bucket];
 }
 
 #pragma mark - Navigation
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    if ([segue.identifier isEqualToString:@"editPost"]) {
+    if ([segue.destinationViewController isKindOfClass:[EditPostViewController class]]) {
         EditPostViewController *editPostViewController = segue.destinationViewController;
         
-        [editPostViewController setBucketName:self.bucketName];
-        [editPostViewController setS3:self.s3];
-        [editPostViewController setTransferManager:self.transferManager];
+        editPostViewController.bucket = self.bucket;
+        editPostViewController.s3 = self.s3;
+        editPostViewController.transferManager = self.transferManager;
+        
+        if ([sender isKindOfClass:[UITableViewCell class]]) {
+            NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
+            AWSS3Object *bucketObject = [self.bucketObjects objectAtIndex:indexPath.row];
+            editPostViewController.filename = bucketObject.key;
+        }
     }
 }
 
@@ -113,12 +110,17 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    PostTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
-    AWSS3Object *object = [self.bucketObjects objectAtIndex:indexPath.row];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
+    AWSS3Object *bucketObject = [self.bucketObjects objectAtIndex:indexPath.row];
     
-    [cell.textView setText:object.key];
+    cell.textLabel.text = bucketObject.key;
     
     return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [self.tableView deselectRowAtIndexPath:[self.tableView indexPathForSelectedRow] animated:YES];
 }
 
 #pragma mark - UIScrollViewDelegate
@@ -143,8 +145,7 @@
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
 {
     if (self.shouldCreateNewPost) {
-        [self performSegueWithIdentifier:@"editPost" sender:self];
-        self.shouldCreateNewPost = NO;
+        [self createNewPost];
     }
 }
 

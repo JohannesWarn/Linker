@@ -1,17 +1,17 @@
 //
-//  PostsTableViewController.h
+//  SettingsTableViewController.h
 //  Linker
 //
-//  Created by Johannes Wärn on 29/11/14.
+//  Created by Johannes Wärn on 06/12/14.
 //  Copyright (c) 2014 Johannes Wärn. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
+#import <AWSiOSSDKv2/S3.h>
 
-@interface PostsTableViewController : UITableViewController
+@interface SettingsTableViewController : UITableViewController
 
 @property (nonatomic) AWSS3 *s3;
 @property (nonatomic) AWSS3TransferManager *transferManager;
-@property (nonatomic) AWSS3Bucket *bucket;
 
 @end

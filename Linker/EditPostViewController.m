@@ -7,70 +7,121 @@
 //
 
 #import <AWSiOSSDKv2/S3.h>
+#import <AWSiOSSDKv2/AWSCore.h>
 
 #import "EditPostViewController.h"
+#import "ProgressNavigationBar.h"
 
 @interface EditPostViewController () <UIScrollViewDelegate, UITextViewDelegate>
 
-@property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
-@property (weak, nonatomic) IBOutlet UITextField *titleField;
-@property (weak, nonatomic) IBOutlet UITextField *linkField;
+@property (weak, nonatomic) IBOutlet UITextField *filenameField;
 @property (weak, nonatomic) IBOutlet UITextView *textView;
+@property (weak, nonatomic) IBOutlet UIImageView *imageView;
 
 @end
 
 @implementation EditPostViewController
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
     [super viewDidLoad];
     
+    if (self.filename != nil) {
+        self.title = self.filename;
+        self.filenameField.text = self.filename;
+        [self download];
+    }
+    
+    ProgressNavigationBar *progressNavigationBar = (ProgressNavigationBar *)self.navigationController.navigationBar;
+    [progressNavigationBar setProgress:0 animated:NO];
+    
+    /*
     [_scrollView setDelegate:self];
     [_textView setDelegate:self];
-    
     [self setupKeyboardNotifications];
+     */
 }
 
 - (void)viewDidAppear:(BOOL)animated
 {
-    if ([_textView.text isEqualToString:@""]) {
+    if (self.filename == nil) {
         [_textView becomeFirstResponder];
     }
 }
 
-- (void)setupKeyboardNotifications
+- (void)viewWillDisappear:(BOOL)animated
 {
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(keyboardDidShow:)
-                                                 name:UIKeyboardDidShowNotification
-                                               object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(keyboardWillBeHidden:)
-                                                 name:UIKeyboardWillHideNotification
-                                               object:nil];
+    ProgressNavigationBar *progressNavigationBar = (ProgressNavigationBar *)self.navigationController.navigationBar;
+    [progressNavigationBar hideProgressView:YES];
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (void)download
+{
+    // Construct the NSURL for the download location.
+    NSString *downloadingFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"downloaded-myImage.jpg"];
+    NSURL *downloadingFileURL = [NSURL fileURLWithPath:downloadingFilePath];
+    
+    // Construct the download request.
+    AWSS3TransferManagerDownloadRequest *downloadRequest = [AWSS3TransferManagerDownloadRequest new];
+    
+    downloadRequest.bucket = self.bucket.name;
+    downloadRequest.key = self.filename;
+    downloadRequest.downloadingFileURL = downloadingFileURL;
+    downloadRequest.downloadProgress = ^(int64_t bytesWritten, int64_t totalBytesWritten, int64_t totalBytesExpectedToWrite){
+        // update progress
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            NSLog(@"%@ of %@ bytes written", @(totalBytesWritten), @(totalBytesExpectedToWrite));
+            
+            if (totalBytesWritten == totalBytesExpectedToWrite) {
+                self.textView.text = [NSString stringWithContentsOfFile:downloadingFilePath usedEncoding:nil error:nil];
+                self.imageView.image = [UIImage imageWithContentsOfFile:downloadingFilePath];
+            }
+        });
+    };
+    
+    // Download the file.
+    [self.transferManager download:downloadRequest];
 }
 
-- (IBAction)publish:(UIBarButtonItem *)sender {
-    AWSS3TransferManagerUploadRequest *request = [[AWSS3TransferManagerUploadRequest alloc] init];
-    [request setBucket:self.bucketName];
-    [request setKey:[self key]];
-    [request setBody:[self bodyURL]];
+- (IBAction)publish:(UIBarButtonItem *)sender
+{
+    typeof(self) __weak weakSelf = self;
     
-    BFTask *task = [self.transferManager upload:request];
-    [task continueWithBlock:^id(BFTask *task) {
+    AWSS3TransferManagerUploadRequest *uploadRequest = [[AWSS3TransferManagerUploadRequest alloc] init];
+    uploadRequest.bucket = self.bucket.name;
+    uploadRequest.key = self.key;
+    uploadRequest.body = self.urlWithBody;
+    
+    if ([self.key containsString:@"."]) {
+        if ([self.key hasSuffix:@".html"]) {
+            uploadRequest.contentType = @"text/html";
+        }
+    } else {
+        uploadRequest.contentType = @"text/plain";
+    }
+    
+    uploadRequest.uploadProgress = ^(int64_t bytesWritten, int64_t totalBytesWritten, int64_t totalBytesExpectedToWrite){
+        // update progress
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            ProgressNavigationBar *progressNavigationBar = (ProgressNavigationBar *)weakSelf.navigationController.navigationBar;
+            
+            float uploadProgress = (float)totalBytesWritten / (float)totalBytesExpectedToWrite;
+            float baseProgress = 0.05;
+            float progress = baseProgress + uploadProgress * (1 - baseProgress);
+            [progressNavigationBar setProgress:progress animated:YES];
+        });
+    };
+    
+    [[self.transferManager upload:uploadRequest] continueWithExecutor:[BFExecutor mainThreadExecutor] withBlock:^id(BFTask *task) {
+        
         return nil;
     }];
 }
 
 - (NSString *)key
 {
-    if (self.titleField.text.length > 0) {
-        return self.titleField.text;
+    if (self.filenameField.text.length > 0) {
+        return self.filenameField.text;
     }
     
     NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -82,9 +133,14 @@
     return randomString;
 }
 
-- (NSURL *)bodyURL
+- (NSURL *)tempURL
 {
-    NSURL *url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[self key]]];
+    return [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[self key]]];
+}
+
+- (NSURL *)urlWithBody
+{
+    NSURL *url = [self tempURL];
     NSError *error;
     
     [self.textView.text writeToURL:url
@@ -93,6 +149,12 @@
                              error:&error];
     
     if (error) {
+        UIAlertController *alertController = [UIAlertController
+                                              alertControllerWithTitle: @"Error"
+                                              message: error.localizedDescription
+                                              preferredStyle: UIAlertControllerStyleAlert];
+        [self presentViewController:alertController animated:YES completion:nil];
+        
         return nil;
     }
     
@@ -100,15 +162,22 @@
 }
 
 /*
-#pragma mark - Navigation
+ - (void)setupKeyboardNotifications
+ {
+ [[NSNotificationCenter defaultCenter] addObserver:self
+ selector:@selector(keyboardDidShow:)
+ name:UIKeyboardDidShowNotification
+ object:nil];
+ 
+ [[NSNotificationCenter defaultCenter] addObserver:self
+ selector:@selector(keyboardWillBeHidden:)
+ name:UIKeyboardWillHideNotification
+ object:nil];
+ }
+ */
 
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
 
+/*
 #pragma mark - UIScrollViewDelegate
 
 - (void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset
@@ -162,5 +231,6 @@
         [textView deleteBackward];
     }
 }
+ */
 
 @end
