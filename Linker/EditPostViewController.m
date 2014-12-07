@@ -15,6 +15,7 @@
 @interface EditPostViewController () <UIScrollViewDelegate, UITextViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UITextField *filenameField;
+@property (weak, nonatomic) IBOutlet UITextField *mediaTypeField;
 @property (weak, nonatomic) IBOutlet UITextView *textView;
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
 
@@ -68,8 +69,7 @@
     downloadRequest.key = self.filename;
     downloadRequest.downloadingFileURL = downloadingFileURL;
     downloadRequest.downloadProgress = ^(int64_t bytesWritten, int64_t totalBytesWritten, int64_t totalBytesExpectedToWrite){
-        // update progress
-        dispatch_sync(dispatch_get_main_queue(), ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
             NSLog(@"%@ of %@ bytes written", @(totalBytesWritten), @(totalBytesExpectedToWrite));
             
             if (totalBytesWritten == totalBytesExpectedToWrite) {
@@ -79,7 +79,6 @@
         });
     };
     
-    // Download the file.
     [self.transferManager download:downloadRequest];
 }
 
@@ -89,16 +88,9 @@
     
     AWSS3TransferManagerUploadRequest *uploadRequest = [[AWSS3TransferManagerUploadRequest alloc] init];
     uploadRequest.bucket = self.bucket.name;
-    uploadRequest.key = self.key;
-    uploadRequest.body = self.urlWithBody;
-    
-    if ([self.key containsString:@"."]) {
-        if ([self.key hasSuffix:@".html"]) {
-            uploadRequest.contentType = @"text/html";
-        }
-    } else {
-        uploadRequest.contentType = @"text/plain";
-    }
+    uploadRequest.key = [self key];
+    uploadRequest.body = [self urlWithBody];
+    uploadRequest.contentType = [self mediaType];
     
     uploadRequest.uploadProgress = ^(int64_t bytesWritten, int64_t totalBytesWritten, int64_t totalBytesExpectedToWrite){
         // update progress
@@ -116,6 +108,19 @@
         
         return nil;
     }];
+}
+
+- (NSString *)mediaType
+{
+    if (self.mediaTypeField.text != nil) {
+        return self.mediaTypeField.text;
+    }
+    return self.defaultMediaType;
+}
+
+- (NSString *)defaultMediaType
+{
+    return @"text/plain";
 }
 
 - (NSString *)key

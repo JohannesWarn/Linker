@@ -84,6 +84,32 @@
                                             </constraints>
                                         </tableViewCellContentView>
                                     </tableViewCell>
+                                    <tableViewCell contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="access key" id="HNL-gj-II1">
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="HNL-gj-II1" id="A76-MU-OdM">
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="text/plain" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="uTj-F8-o0g" userLabel="access key text view">
+                                                    <rect key="frame" x="106" y="12" width="486" height="20"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                                    <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" returnKeyType="next"/>
+                                                </textField>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="1000" text="Media type: " lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zKw-Xh-zdN">
+                                                    <rect key="frame" x="16" y="12" width="90" height="20"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                                    <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="zKw-Xh-zdN" firstAttribute="leading" secondItem="A76-MU-OdM" secondAttribute="leading" constant="16" id="Kk1-pv-tiW"/>
+                                                <constraint firstAttribute="centerY" secondItem="zKw-Xh-zdN" secondAttribute="centerY" id="eqI-YK-HiE"/>
+                                                <constraint firstItem="uTj-F8-o0g" firstAttribute="leading" secondItem="zKw-Xh-zdN" secondAttribute="trailing" id="iXj-5B-S72"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="uTj-F8-o0g" secondAttribute="trailing" id="oPm-9D-p1F"/>
+                                                <constraint firstItem="zKw-Xh-zdN" firstAttribute="baseline" secondItem="uTj-F8-o0g" secondAttribute="baseline" id="txo-Xf-tuJ"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
                                     <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="269" id="zZT-x3-glk">
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="zZT-x3-glk" id="gNk-Ym-9pc">
@@ -122,6 +148,7 @@
                     <connections>
                         <outlet property="filenameField" destination="CCb-ZA-WyO" id="u4K-fi-27d"/>
                         <outlet property="imageView" destination="bct-Du-EbC" id="P6c-3j-kj9"/>
+                        <outlet property="mediaTypeField" destination="uTj-F8-o0g" id="qja-f2-6vS"/>
                         <outlet property="textView" destination="SBV-Me-qCZ" id="AyF-hK-K0J"/>
                     </connections>
                 </tableViewController>
