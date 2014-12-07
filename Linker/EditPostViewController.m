@@ -166,6 +166,20 @@
     return url;
 }
 
+#pragma mark - Table view data source
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [self.tableView deselectRowAtIndexPath:[self.tableView indexPathForSelectedRow] animated:YES];
+    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    for (UIView *subview in [cell.contentView subviews]) {
+        if ([subview canBecomeFirstResponder]) {
+            [subview becomeFirstResponder];
+            return;
+        }
+    }
+}
+
 /*
  - (void)setupKeyboardNotifications
  {
