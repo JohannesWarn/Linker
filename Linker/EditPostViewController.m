@@ -8,6 +8,7 @@
 
 #import <AWSiOSSDKv2/S3.h>
 #import <AWSiOSSDKv2/AWSCore.h>
+#import <MMMarkdown/MMMarkdown.h>
 
 #import "EditPostViewController.h"
 #import "ProgressNavigationBar.h"
@@ -108,15 +109,15 @@
     
 }
 
-- (IBAction)publish:(UIBarButtonItem *)sender
+- (void)uploadObjectWithBucket:(AWSS3Bucket *)bucket key:(NSString *)key body:(NSURL *)body mediaType:(NSString *)mediaType
 {
     typeof(self) __weak weakSelf = self;
     
     AWSS3TransferManagerUploadRequest *uploadRequest = [[AWSS3TransferManagerUploadRequest alloc] init];
-    uploadRequest.bucket = self.bucket.name;
-    uploadRequest.key = [self key];
-    uploadRequest.body = [self urlWithBody];
-    uploadRequest.contentType = [self mediaType];
+    uploadRequest.bucket = bucket.name;
+    uploadRequest.key = key;
+    uploadRequest.body = body;
+    uploadRequest.contentType = mediaType;
     
     uploadRequest.uploadProgress = ^(int64_t bytesWritten, int64_t totalBytesWritten, int64_t totalBytesExpectedToWrite){
         // update progress
@@ -135,6 +136,45 @@
         
         return nil;
     }];
+}
+
+- (IBAction)publish:(UIBarButtonItem *)sender
+{
+    [self uploadObjectWithBucket:self.bucket key:[self key] body:[self urlWithBody] mediaType:[self mediaType]];
+    
+    if ([[self mediaType] isEqualToString:@"text/markdown"]) {
+        NSError *error;
+        
+        NSMutableArray *components = [NSMutableArray arrayWithArray:[[self key] componentsSeparatedByString:@"."]];
+        if (components.count > 1) {
+            [components removeLastObject];
+        }
+        [components addObject:@"html"];
+        NSString *key = [components componentsJoinedByString:@"."];
+        
+        NSURL *url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:key]];
+        NSString *htmlString = [MMMarkdown HTMLStringWithMarkdown:self.textView.text error:&error];
+        
+        if (error) {
+            UIAlertController *alertController = [UIAlertController
+                                                  alertControllerWithTitle: @"Error"
+                                                  message: error.localizedDescription
+                                                  preferredStyle: UIAlertControllerStyleAlert];
+            [self presentViewController:alertController animated:YES completion:nil];
+        }
+        
+        [htmlString writeToURL:url atomically:YES encoding:NSUTF8StringEncoding error:&error];
+        
+        if (error) {
+            UIAlertController *alertController = [UIAlertController
+                                                  alertControllerWithTitle: @"Error"
+                                                  message: error.localizedDescription
+                                                  preferredStyle: UIAlertControllerStyleAlert];
+            [self presentViewController:alertController animated:YES completion:nil];
+        }
+        
+        [self uploadObjectWithBucket:self.bucket key:key body:url mediaType:@"text/html"];
+    }
 }
 
 - (NSString *)mediaType
@@ -175,10 +215,7 @@
     NSURL *url = [self tempURL];
     NSError *error;
     
-    [self.textView.text writeToURL:url
-                        atomically:YES
-                          encoding:NSUTF8StringEncoding
-                             error:&error];
+    [self.textView.text writeToURL:url atomically:YES encoding:NSUTF8StringEncoding error:&error];
     
     if (error) {
         UIAlertController *alertController = [UIAlertController

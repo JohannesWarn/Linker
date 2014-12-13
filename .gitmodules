@@ -1,0 +1,3 @@
+[submodule "Frameworks/MMMarkdown"]
+	path = Frameworks/MMMarkdown
+	url = https://github.com/mdiep/MMMarkdown
