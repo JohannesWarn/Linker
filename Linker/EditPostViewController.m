@@ -27,9 +27,9 @@
 {
     [super viewDidLoad];
     
-    if (self.filename != nil) {
-        self.title = self.filename;
-        self.filenameField.text = self.filename;
+    if (self.object.key != nil) {
+        self.title = self.object.key;
+        self.filenameField.text = self.object.key;
         [self download];
     }
     
@@ -45,41 +45,67 @@
 
 - (void)viewDidAppear:(BOOL)animated
 {
-    if (self.filename == nil) {
+    [super viewDidAppear:animated];
+    
+    if (self.object == nil) {
         [_textView becomeFirstResponder];
     }
 }
 
 - (void)viewWillDisappear:(BOOL)animated
 {
+    [super viewWillDisappear:animated];
+    
     ProgressNavigationBar *progressNavigationBar = (ProgressNavigationBar *)self.navigationController.navigationBar;
     [progressNavigationBar hideProgressView:YES];
 }
 
 - (void)download
 {
+    typeof(self) __weak weakSelf = self;
+    
     // Construct the NSURL for the download location.
-    NSString *downloadingFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"downloaded-myImage.jpg"];
+    NSString *downloadingFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[self key]];
     NSURL *downloadingFileURL = [NSURL fileURLWithPath:downloadingFilePath];
     
     // Construct the download request.
-    AWSS3TransferManagerDownloadRequest *downloadRequest = [AWSS3TransferManagerDownloadRequest new];
+    AWSS3TransferManagerDownloadRequest *downloadRequest = [[AWSS3TransferManagerDownloadRequest alloc] init];
     
     downloadRequest.bucket = self.bucket.name;
-    downloadRequest.key = self.filename;
+    downloadRequest.key = [self key];
     downloadRequest.downloadingFileURL = downloadingFileURL;
     downloadRequest.downloadProgress = ^(int64_t bytesWritten, int64_t totalBytesWritten, int64_t totalBytesExpectedToWrite){
         dispatch_async(dispatch_get_main_queue(), ^{
             NSLog(@"%@ of %@ bytes written", @(totalBytesWritten), @(totalBytesExpectedToWrite));
             
-            if (totalBytesWritten == totalBytesExpectedToWrite) {
-                self.textView.text = [NSString stringWithContentsOfFile:downloadingFilePath usedEncoding:nil error:nil];
-                self.imageView.image = [UIImage imageWithContentsOfFile:downloadingFilePath];
+            // workaround for continueWith[...] not working for text/html content
+            // really don't get why it doesn't
+            if (totalBytesExpectedToWrite == totalBytesWritten) {
+                weakSelf.mediaTypeField.text = @"text/html";
+                weakSelf.textView.text = [NSString stringWithContentsOfFile:downloadingFilePath usedEncoding:nil error:nil];
             }
         });
     };
     
-    [self.transferManager download:downloadRequest];
+    [[self.transferManager download:downloadRequest] continueWithExecutor:[BFExecutor mainThreadExecutor] withBlock:^id(BFTask *task) {
+        if ([task.result isKindOfClass:[AWSS3TransferManagerDownloadOutput class]]) {
+            AWSS3TransferManagerDownloadOutput *output = task.result;
+            
+            weakSelf.mediaTypeField.text = output.contentType;
+            
+            if ([output.body isKindOfClass:[NSURL class]]) {
+                NSURL *fileURL = (NSURL *)output.body;
+                if ([output.contentType hasPrefix:@"image"]) {
+                    weakSelf.imageView.image = [UIImage imageWithContentsOfFile:fileURL.path];
+                } else {
+                    weakSelf.textView.text = [NSString stringWithContentsOfFile:fileURL.path usedEncoding:nil error:nil];
+                }
+            }
+        }
+        
+        return nil;
+    }];
+    
 }
 
 - (IBAction)publish:(UIBarButtonItem *)sender
@@ -100,7 +126,8 @@
             float uploadProgress = (float)totalBytesWritten / (float)totalBytesExpectedToWrite;
             float baseProgress = 0.05;
             float progress = baseProgress + uploadProgress * (1 - baseProgress);
-            [progressNavigationBar setProgress:progress animated:YES];
+            BOOL animated = progress != 1;
+            [progressNavigationBar setProgress:progress animated:animated];
         });
     };
     

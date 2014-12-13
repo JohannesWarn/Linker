@@ -13,7 +13,6 @@
 @property (nonatomic) AWSS3 *s3;
 @property (nonatomic) AWSS3TransferManager *transferManager;
 @property (nonatomic) AWSS3Bucket *bucket;
-
-@property (nonatomic) NSString *filename;
+@property (nonatomic) AWSS3Object *object;
 
 @end

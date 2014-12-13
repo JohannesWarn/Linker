@@ -28,6 +28,8 @@
 
 - (void)viewDidAppear:(BOOL)animated
 {
+    [super viewDidAppear:animated];
+    
     [self setupS3];
     [self findBuckets];
 }
@@ -52,20 +54,19 @@
 - (void)findBuckets
 {
     if (self.s3 == nil) { return; }
-    typeof(self) __weak weakSelf = self;
     
+    typeof(self) __weak weakSelf = self;
     AWSRequest *request = [[AWSRequest alloc] init];
     
-    BFTask *task = [self.s3 listBuckets:request];
-    [task continueWithBlock:^id(BFTask *task) {
+    [[self.s3 listBuckets:request] continueWithExecutor:[BFExecutor mainThreadExecutor] withBlock:^id(BFTask *task) {
         if ([task.result isKindOfClass:[AWSS3ListBucketsOutput class]]) {
             AWSS3ListBucketsOutput *output = (AWSS3ListBucketsOutput *)task.result;
-            self.buckets = output.buckets;
+            weakSelf.buckets = output.buckets;
         }
         if (task.error != nil) {
-            self.errorMessage = [task.error.userInfo objectForKey:@"Message"];
+            weakSelf.errorMessage = [task.error.userInfo objectForKey:@"Message"];
         } else {
-            self.errorMessage = nil;
+            weakSelf.errorMessage = nil;
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{

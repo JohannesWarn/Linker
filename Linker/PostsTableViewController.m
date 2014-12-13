@@ -51,17 +51,15 @@
     typeof(self) __weak weakSelf = self;
     
     AWSS3ListObjectsRequest *request = [[AWSS3ListObjectsRequest alloc] init];
-    [request setBucket:bucket.name];
+    request.bucket = bucket.name;
+    request.delimiter = @"/";
     
-    BFTask *task = [self.s3 listObjects:request];
-    [task continueWithBlock:^id(BFTask *task) {
+    [[self.s3 listObjects:request] continueWithExecutor:[BFExecutor mainThreadExecutor] withBlock:^id(BFTask *task) {
         if ([task.result isKindOfClass:[AWSS3ListObjectsOutput class]]) {
             AWSS3ListObjectsOutput *output = (AWSS3ListObjectsOutput *)task.result;
             weakSelf.bucketObjects = output.contents;
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [weakSelf.tableView reloadSections:[NSIndexSet indexSetWithIndex:0]
-                                  withRowAnimation:UITableViewRowAnimationAutomatic];
-            });
+            [weakSelf.tableView reloadSections:[NSIndexSet indexSetWithIndex:0]
+                              withRowAnimation:UITableViewRowAnimationAutomatic];
         }
         
         return nil;
@@ -92,7 +90,8 @@
         if ([sender isKindOfClass:[UITableViewCell class]]) {
             NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
             AWSS3Object *bucketObject = [self.bucketObjects objectAtIndex:indexPath.row];
-            editPostViewController.filename = bucketObject.key;
+            
+            editPostViewController.object = bucketObject;
         }
     }
 }
