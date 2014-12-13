@@ -13,7 +13,7 @@
 
 @interface PostsTableViewController ()
 
-@property (nonatomic) NSArray *bucketObjects;
+@property (nonatomic) NSMutableArray *bucketObjects;
 
 @property (nonatomic) UIView *scrollIndicator;
 @property (nonatomic) BOOL shouldCreateNewPost;
@@ -57,7 +57,7 @@
     [[self.s3 listObjects:request] continueWithExecutor:[BFExecutor mainThreadExecutor] withBlock:^id(BFTask *task) {
         if ([task.result isKindOfClass:[AWSS3ListObjectsOutput class]]) {
             AWSS3ListObjectsOutput *output = (AWSS3ListObjectsOutput *)task.result;
-            weakSelf.bucketObjects = output.contents;
+            weakSelf.bucketObjects = [NSMutableArray arrayWithArray:output.contents];
             [weakSelf.tableView reloadSections:[NSIndexSet indexSetWithIndex:0]
                               withRowAnimation:UITableViewRowAnimationAutomatic];
         }
@@ -71,6 +71,18 @@
     [self.tableView selectRowAtIndexPath:nil animated:YES scrollPosition:UITableViewScrollPositionNone];
     [self performSegueWithIdentifier:@"edit post" sender:self];
     self.shouldCreateNewPost = NO;
+}
+
+- (void)removeObjectInBucket:(AWSS3Bucket *)bucket atIndex:(NSUInteger)index
+{
+    AWSS3Object *object = [self.bucketObjects objectAtIndex:index];
+    
+    AWSS3DeleteObjectRequest *request = [[AWSS3DeleteObjectRequest alloc] init];
+    request.bucket = bucket.name;
+    request.key = object.key;
+    [self.s3 deleteObject:request];
+    
+    [self.bucketObjects removeObjectAtIndex:index];
 }
 
 - (IBAction)refresh:(UIBarButtonItem *)sender {
@@ -122,6 +134,15 @@
     [self.tableView deselectRowAtIndexPath:[self.tableView indexPathForSelectedRow] animated:YES];
 }
 
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        [self removeObjectInBucket:self.bucket atIndex:indexPath.row];
+        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
+        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
+    }
+}
+
 #pragma mark - UIScrollViewDelegate
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
@@ -147,26 +168,6 @@
         [self createNewPost];
     }
 }
-
-/*
-// Override to support conditional editing of the table view.
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-    // Return NO if you do not want the specified item to be editable.
-    return YES;
-}
-*/
-
-/*
-// Override to support editing the table view.
-- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (editingStyle == UITableViewCellEditingStyleDelete) {
-        // Delete the row from the data source
-        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
-        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-    }   
-}
-*/
 
 /*
 // Override to support rearranging the table view.
