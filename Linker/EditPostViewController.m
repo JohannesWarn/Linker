@@ -140,19 +140,20 @@
 
 - (IBAction)publish:(UIBarButtonItem *)sender
 {
-    [self uploadObjectWithBucket:self.bucket key:[self key] body:[self urlWithBody] mediaType:[self mediaType]];
+    NSString *key = [self key];
+    [self uploadObjectWithBucket:self.bucket key:key body:[self urlWithBody] mediaType:[self mediaType]];
     
     if ([[self mediaType] isEqualToString:@"text/markdown"]) {
         NSError *error;
         
-        NSMutableArray *components = [NSMutableArray arrayWithArray:[[self key] componentsSeparatedByString:@"."]];
+        NSMutableArray *components = [NSMutableArray arrayWithArray:[key componentsSeparatedByString:@"."]];
         if (components.count > 1) {
             [components removeLastObject];
         }
         [components addObject:@"html"];
-        NSString *key = [components componentsJoinedByString:@"."];
+        NSString *htmlKey = [components componentsJoinedByString:@"."];
         
-        NSURL *url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:key]];
+        NSURL *url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:htmlKey]];
         NSString *htmlString = [MMMarkdown HTMLStringWithMarkdown:self.textView.text error:&error];
         
         if (error) {
@@ -173,7 +174,7 @@
             [self presentViewController:alertController animated:YES completion:nil];
         }
         
-        [self uploadObjectWithBucket:self.bucket key:key body:url mediaType:@"text/html"];
+        [self uploadObjectWithBucket:self.bucket key:htmlKey body:url mediaType:@"text/html"];
     }
 }
 
@@ -200,6 +201,11 @@
     NSMutableString *randomString = [NSMutableString stringWithCapacity:6];
     for (int i = 0; i < 6; i++) {
         [randomString appendFormat: @"%C", [letters characterAtIndex: arc4random_uniform((unsigned int)[letters length])]];
+    }
+    if ([[self mediaType] isEqualToString:@"text/markdown"]) {
+        [randomString appendString:@".md"];
+    } else if ([[self mediaType] isEqualToString:@"text/html"]) {
+        [randomString appendString:@".html"];
     }
     
     return randomString;
